@@ -14,18 +14,18 @@ const POC_DIAGRAM = `┌──────────────────�
              │
              ▼
 ┌─────────────────────────┐
-│     Next.js / Vercel    │
-│       Mr. Reconcile     │
+│ Next.js + useEveAgent() │
+│       withEve()         │
 └────────────┬────────────┘
              │
              ▼
 ┌─────────────────────────┐
-│        /api/chat        │
+│  /eve/v1/session routes │
 └────────────┬────────────┘
              │
              ▼
 ┌─────────────────────────┐
-│   AI SDK ToolLoopAgent  │
+│   Eve durable session   │
 │       AI Gateway        │
 └────────────┬────────────┘
              │
@@ -55,6 +55,12 @@ const POC_DIAGRAM = `┌──────────────────�
 ┌───────────────────────────────────────┐
 │  Synthetic AcmeCommerce Provider Data │
 │  Payments · Transactions · Settlements│
+└───────────────────┬───────────────────┘
+                    │ action.result
+                    ▼
+┌───────────────────────────────────────┐
+│ Deterministic InvestigationStep[] UI  │
+│   Statuses and amounts from tools     │
 └───────────────────────────────────────┘`;
 
 export default function ArchitecturePage() {

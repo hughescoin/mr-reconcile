@@ -1,16 +1,7 @@
 import { getPayment } from "@/lib/acmecommerce-api-core";
+import { paymentSchema } from "@/lib/reconciliation-schemas";
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-
-const paymentSchema = z.object({
-  paymentId: z.string(),
-  merchantOrderId: z.string(),
-  transactionHash: z.string(),
-  expectedUsd: z.number(),
-  network: z.string(),
-  paymentStatus: z.enum(["COMPLETED", "PENDING"]),
-  createdAt: z.string(),
-});
 
 export default defineTool({
   description:

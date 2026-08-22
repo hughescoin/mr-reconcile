@@ -1,22 +1,7 @@
 import { getSettlement } from "@/lib/acmecommerce-api-core";
+import { settlementSchema } from "@/lib/reconciliation-schemas";
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-
-const settlementSchema = z.object({
-  settlementId: z.string(),
-  paymentId: z.string(),
-  grossUsd: z.number(),
-  adjustments: z.object({
-    quoteProtectionUsd: z.number(),
-  }),
-  fees: z.object({
-    networkUsd: z.number(),
-    platformUsd: z.number(),
-  }),
-  netUsd: z.number().nullable(),
-  settlementStatus: z.enum(["COMPLETED", "PENDING"]),
-  settledAt: z.string().nullable(),
-});
 
 export default defineTool({
   description:

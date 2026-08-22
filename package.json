@@ -12,7 +12,7 @@
     "lint": "eslint",
     "test": "node --env-file=.env.local --conditions=react-server --import tsx --test tests/*.test.ts",
     "test:eval": "node --env-file=.env.local --conditions=react-server --import tsx --test tests/*.eval.ts",
-    "test:eve": "node --env-file=.env.local --conditions=react-server --import tsx --test tests/eve-tools.test.ts",
+    "test:eve": "node --env-file=.env.local --conditions=react-server --import tsx --test tests/eve-tools.test.ts tests/map-eve-investigation-steps.test.ts",
     "test:eve:eval": "eve eval --strict"
   },
   "dependencies": {

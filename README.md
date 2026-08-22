@@ -99,13 +99,13 @@ Operational payment, blockchain, and settlement states shown in the interface ar
 ```text
 Browser / User
       ↓
-Next.js on Vercel
+Next.js + useEveAgent()
       ↓
-POST /api/chat
+/eve/v1/session
       ↓
-Vercel Function + Fluid Compute
+withEve() mounted Eve runtime
       ↓
-AI SDK ToolLoopAgent
+Eve durable session
       ↕
 AI Gateway
       ↓
@@ -122,6 +122,12 @@ AWS Lambda
       ↓
 Authoritative Synthetic Data
 Payments · Transactions · Settlements
+      ↓
+Eve action.result events
+      ↓
+Deterministic InvestigationStep[] mapper
+      ↓
+Financial status and amount UI
 ```
 
 ### What Stays Outside Vercel
@@ -138,15 +144,16 @@ The goal is not to migrate the payment platform. The goal is to add a better inv
 
 ## Vercel Products
 
-### AI SDK
+### Eve
 
 Used for:
 
-- `ToolLoopAgent`
-- tool calling
-- multi-step investigation
-- streaming responses
-- client/server AI message handling
+- directory-based agent and tool definitions
+- durable sessions and multi-step tool execution
+- same-origin Next.js routes through `withEve()`
+- streamed React state through `useEveAgent()`
+- authoritative structured tool-result events
+- repeatable Eve-native evals
 
 ### AI Gateway
 
@@ -156,9 +163,9 @@ This keeps model integration separate from application logic and creates a path 
 
 Provider failover is not demonstrated in the current proof of concept.
 
-### Vercel Functions + Fluid Compute
+### Vercel Functions
 
-`/api/chat` runs server-side as a Vercel Function with Fluid Compute enabled.
+`withEve()` packages the Next.js application and Eve runtime as one Vercel project, routing `/eve/v1/**` requests to the generated Eve service.
 
 This execution layer handles:
 
@@ -225,7 +232,7 @@ This is a focused proof of concept.
 - **Authentication and authorization:** The public demo intentionally does not implement merchant identity or tenant authorization.
 - **Network boundary:** The current Vercel-to-AWS integration uses public HTTPS.
 - **Agent nondeterminism:** Model-driven tool selection can produce different investigation paths across runs. Higher-risk mandatory financial checks may warrant deterministic application logic.
-- **Durability and history:** Investigations are interactive and short-lived; no persistent audit trail is currently stored.
+- **Durability and history:** Eve durably executes each live session, but this checkpoint does not yet persist the browser session cursor or event log across page reloads and does not provide a long-term audit store.
 
 ## Validation
 
@@ -235,6 +242,8 @@ The project was validated with:
 - AcmeCommerce API integration tests
 - reconciliation tool integration tests
 - agent tests and evaluation cases
+- deterministic Eve tool and event-mapper parity tests
+- Eve-native end-to-end eval definitions
 - ESLint
 - TypeScript
 - production builds

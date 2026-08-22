@@ -1,14 +1,13 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
+import { useEveAgent } from "eve/react";
 import { useState } from "react";
-import type { ReconciliationAgentUIMessage } from "@/agents/reconciliation-agent";
 import { AnswerSection } from "@/components/AnswerSection";
 import { AskPanel } from "@/components/AskPanel";
 import { ExamplePromptChips } from "@/components/ExamplePromptChips";
 import { InvestigationTrace } from "@/components/InvestigationTrace";
 import { StatusBadge } from "@/components/StatusBadge";
-import { mapInvestigationSteps } from "@/lib/map-investigation-steps";
+import { mapEveInvestigationSteps } from "@/lib/map-eve-investigation-steps";
 
 const EXAMPLE_PROMPTS = [
   {
@@ -32,8 +31,8 @@ const EXAMPLE_PROMPTS = [
 
 export function ReconciliationChat() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status, error } =
-    useChat<ReconciliationAgentUIMessage>();
+  const agent = useEveAgent();
+  const { messages } = agent.data;
 
   async function handleSubmit() {
     const question = input.trim();
@@ -44,9 +43,7 @@ export function ReconciliationChat() {
 
     setInput("");
 
-    await sendMessage({
-      text: question,
-    });
+    await agent.send(question);
   }
 
   const latestUserMessage = [...messages]
@@ -65,8 +62,12 @@ export function ReconciliationChat() {
       .filter((part) => part.type === "text")
       .map((part) => part.text)
       .join("") ?? "";
-  const isInvestigating = status === "submitted" || status === "streaming";
-  const investigationSteps = mapInvestigationSteps(latestAssistantMessage);
+  const isInvestigating =
+    agent.status === "submitted" || agent.status === "streaming";
+  const investigationSteps =
+    agent.status === "submitted"
+      ? []
+      : mapEveInvestigationSteps(agent.events);
 
   const settlementStep = investigationSteps.find(
     (step) => step.type === "settlement",
@@ -134,7 +135,7 @@ export function ReconciliationChat() {
         <InvestigationTrace steps={investigationSteps} />
       )}
 
-      {error && (
+      {agent.error && (
         <section className="ruled-section error-section" role="alert">
           <div className="error-section__content">
             <h2 className="error-section__title">Investigation unavailable</h2>
