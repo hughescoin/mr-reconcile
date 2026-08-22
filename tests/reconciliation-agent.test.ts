@@ -43,9 +43,16 @@ test("reconciliationAgent investigates pay_2007 through its tools", async () => 
     /\bsettlement\b[\s\S]{0,100}\bpending\b|\bpending\b[\s\S]{0,100}\bsettlement\b/i,
     "expected the response to say the settlement is pending",
   );
-  assert.match(
-    result.text,
-    /\b(?:net(?:Usd|\s+(?:amount|payout))?|(?:final\s+)?(?:net\s+)?settlement amount)\b[\s\S]{0,120}\b(?:null|not (?:yet )?available|unavailable|not (?:been )?(?:calculated|finalized|recorded)|cannot provide)\b/i,
+  const saysNoAuthoritativeNetAmount =
+    /\bno\s+(?:completed\s+)?authoritative\s+(?:(?:final\s+)?(?:net\s+)?settlement amount|net(?:\s+(?:amount|payout))?)\b/i.test(
+      result.text,
+    ) ||
+    /\b(?:net(?:Usd|\s+(?:amount|payout))?|(?:final\s+)?(?:net\s+)?settlement amount)\b[\s\S]{0,120}\b(?:null|not (?:yet )?available|unavailable|not (?:been )?(?:calculated|finalized|recorded)|cannot provide)\b/i.test(
+      result.text,
+    );
+
+  assert.ok(
+    saysNoAuthoritativeNetAmount,
     "expected the response to explain that no authoritative net amount is available",
   );
   assert.doesNotMatch(

@@ -6,11 +6,52 @@
       "get-payment-details",
       "get-settlement-details"
     ],
-    "requiredFacts": [
-      ["payment", "completed"],
-      ["gross", "500"],
-      ["network fee", "1.50"],
-      ["net", "498.50"]
+    "requiredToolFacts": [
+      {
+        "tool": "get-payment-details",
+        "path": "paymentStatus",
+        "expected": "COMPLETED"
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "settlementStatus",
+        "expected": "COMPLETED"
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "grossUsd",
+        "expected": 500
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "fees.networkUsd",
+        "expected": 1.5
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "netUsd",
+        "expected": 498.5
+      }
+    ],
+    "requiredResponseFacts": [
+      {
+        "description": "the $500 gross amount",
+        "patterns": [
+          "\\bgross\\b[\\s\\S]{0,60}(?:\\$\\s*)?500(?:\\.00)?\\b"
+        ]
+      },
+      {
+        "description": "the $1.50 network fee",
+        "patterns": [
+          "(?:\\bnetwork fee\\b[\\s\\S]{0,50}(?:\\$\\s*)?1\\.50\\b|(?:\\$\\s*)?1\\.50\\b[\\s\\S]{0,50}\\bnetwork fee\\b)"
+        ]
+      },
+      {
+        "description": "the $498.50 completed settlement",
+        "patterns": [
+          "(?:\\bnet(?:ted)?\\b|\\bsettlement\\b)[\\s\\S]{0,60}(?:\\$\\s*)?498\\.50\\b"
+        ]
+      }
     ],
     "prohibitedClaims": [
       {
@@ -28,11 +69,53 @@
       "get-transaction-details",
       "get-settlement-details"
     ],
-    "requiredFacts": [
-      ["quote", "execution", "price"],
-      ["quote protection", "2.70"],
-      ["settlement", "completed"],
-      ["settlement", "1,200"]
+    "requiredToolFacts": [
+      {
+        "tool": "get-transaction-details",
+        "path": "quotePriceUsd",
+        "expected": 65146.58
+      },
+      {
+        "tool": "get-transaction-details",
+        "path": "executionPriceUsd",
+        "expected": 65000
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "adjustments.quoteProtectionUsd",
+        "expected": 2.7
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "settlementStatus",
+        "expected": "COMPLETED"
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "netUsd",
+        "expected": 1200
+      }
+    ],
+    "requiredResponseFacts": [
+      {
+        "description": "the quote-versus-execution difference",
+        "patterns": [
+          "\\bquot(?:e|ed|ation)\\b",
+          "\\bexecut(?:e|ed|ion)\\b"
+        ]
+      },
+      {
+        "description": "the $2.70 quote-protection adjustment",
+        "patterns": [
+          "(?:\\bquote[- ]protection\\b[\\s\\S]{0,60}(?:\\$\\s*)?2\\.70\\b|(?:\\$\\s*)?2\\.70\\b[\\s\\S]{0,60}\\bquote[- ]protection\\b)"
+        ]
+      },
+      {
+        "description": "the completed $1,200 settlement",
+        "patterns": [
+          "\\bsettlement\\b[\\s\\S]{0,80}(?:\\$\\s*)?1,?200(?:\\.00)?\\b"
+        ]
+      }
     ],
     "prohibitedClaims": [
       {
@@ -50,10 +133,47 @@
       "get-transaction-details",
       "get-settlement-details"
     ],
-    "requiredFacts": [
-      ["payment", "completed"],
-      ["transaction", "confirmed"],
-      ["settlement", "pending"]
+    "requiredToolFacts": [
+      {
+        "tool": "get-payment-details",
+        "path": "paymentStatus",
+        "expected": "COMPLETED"
+      },
+      {
+        "tool": "get-transaction-details",
+        "path": "confirmationStatus",
+        "expected": "CONFIRMED"
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "settlementStatus",
+        "expected": "PENDING"
+      },
+      {
+        "tool": "get-settlement-details",
+        "path": "netUsd",
+        "expected": null
+      }
+    ],
+    "requiredResponseFacts": [
+      {
+        "description": "the completed payment",
+        "patterns": [
+          "(?:\\bpayment\\b[\\s\\S]{0,50}\\bcompleted\\b|\\bcompleted\\b[\\s\\S]{0,50}\\bpayment\\b)"
+        ]
+      },
+      {
+        "description": "the confirmed transaction",
+        "patterns": [
+          "(?:\\btransaction\\b[\\s\\S]{0,50}\\bconfirmed\\b|\\bconfirmed\\b[\\s\\S]{0,50}\\btransaction\\b)"
+        ]
+      },
+      {
+        "description": "the pending settlement",
+        "patterns": [
+          "(?:\\bsettlement\\b[\\s\\S]{0,50}\\bpending\\b|\\bpending\\b[\\s\\S]{0,50}\\bsettlement\\b)"
+        ]
+      }
     ],
     "prohibitedClaims": [
       {
@@ -70,9 +190,43 @@
       "get-payment-details",
       "get-transaction-details"
     ],
-    "requiredFacts": [
-      ["transaction", "pending"],
-      ["2", "3", "confirmation"]
+    "requiredToolFacts": [
+      {
+        "tool": "get-payment-details",
+        "path": "paymentStatus",
+        "expected": "PENDING"
+      },
+      {
+        "tool": "get-transaction-details",
+        "path": "confirmationStatus",
+        "expected": "PENDING"
+      },
+      {
+        "tool": "get-transaction-details",
+        "path": "confirmations",
+        "expected": 2
+      },
+      {
+        "tool": "get-transaction-details",
+        "path": "requiredConfirmations",
+        "expected": 3
+      }
+    ],
+    "requiredResponseFacts": [
+      {
+        "description": "the pending transaction",
+        "patterns": [
+          "(?:\\btransaction\\b[\\s\\S]{0,100}\\bpending\\b|\\bpending\\b[\\s\\S]{0,100}\\btransaction\\b)"
+        ]
+      },
+      {
+        "description": "two of three required confirmations",
+        "patterns": [
+          "\\b2\\b",
+          "\\b3\\b",
+          "\\bconfirmation"
+        ]
+      }
     ],
     "prohibitedClaims": [
       {
