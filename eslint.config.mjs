@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     ".vercel/**",
     "next-env.d.ts",
+    // Generated eve compiler and host output.
+    ".eve/**",
+    ".output/**",
+    ".nitro/**",
     // Static design-handoff references are not application source.
     "docs/design_handoff_mr_reconcile/**",
   ]),
