@@ -46,4 +46,4 @@ A quick stop/start can briefly leave Eve's generated `.eve/next-dev-server.json`
 - `evals/durability/session-continuity.eval.ts` verifies two turns retain the same Eve session.
 - `evals/durability/cancel-and-resume.eval.ts` verifies a cancelled turn returns to waiting and the session accepts a follow-up.
 
-The Eve-native durability evals require a live model and agent runtime. They are discoverable through `eve eval --list`; run them with `npm run test:eve:eval` in an environment with the configured AI Gateway credentials and local server permissions.
+The Eve-native durability evals require a live model and agent runtime. They are discoverable through `eve eval --list`; run them with `npm run test:eval` in an environment with the configured AI Gateway credentials and local server permissions.

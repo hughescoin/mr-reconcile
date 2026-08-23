@@ -159,6 +159,19 @@ Used for:
 See [the Eve durability experiment](docs/eve-durability.md) for the browser
 recovery design, retry semantics, and checkpoint results.
 
+### Eve Agent Layout
+
+The production agent is defined entirely in the `agent/` directory:
+
+- `agent/agent.ts` configures the model and reasoning behavior.
+- `agent/instructions.md` defines Mr. Reconcile's operating instructions.
+- `agent/tools/` contains the payment, transaction, and settlement tools.
+- `agent/channels/eve.ts` exposes the agent through Eve's native channel.
+- `evals/` contains the Eve-native reconciliation and durability evaluations.
+
+The browser talks directly to Eve through `useEveAgent()`. There is no separate
+AI SDK `ToolLoopAgent` or `/api/chat` compatibility route.
+
 ### AI Gateway
 
 Provides the model-access boundary between the application and the underlying model.
@@ -244,9 +257,7 @@ The project was validated with:
 
 - Lambda tests
 - AcmeCommerce API integration tests
-- reconciliation tool integration tests
-- agent tests and evaluation cases
-- deterministic Eve tool and event-mapper parity tests
+- deterministic Eve tool and event-mapper tests
 - Eve-native end-to-end eval definitions
 - ESLint
 - TypeScript

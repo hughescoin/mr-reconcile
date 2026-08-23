@@ -6,18 +6,8 @@ import type { ToolContext } from "eve/tools";
 import getPaymentDetailsEve from "../agent/tools/get-payment-details";
 import getSettlementDetailsEve from "../agent/tools/get-settlement-details";
 import getTransactionDetailsEve from "../agent/tools/get-transaction-details";
-import {
-  getPaymentDetails,
-  getSettlementDetails,
-  getTransactionDetails,
-} from "../tools/get-payment-details";
 
 const TEST_BASE_URL = "https://acmecommerce.example.test";
-const AI_SDK_TOOL_OPTIONS = {
-  toolCallId: "eve-parity-test",
-  messages: [],
-  context: {},
-};
 
 interface FetchCall {
   input: string | URL | Request;
@@ -62,7 +52,7 @@ function eveContext(toolName: string, signal: AbortSignal): ToolContext {
   } as ToolContext;
 }
 
-test("Eve payment tool preserves the legacy authoritative result", async () => {
+test("Eve payment tool returns the authoritative payment result", async () => {
   const fixture = {
     paymentId: "pay_2007",
     merchantOrderId: "order_9007",
@@ -76,24 +66,19 @@ test("Eve payment tool preserves the legacy authoritative result", async () => {
   const controller = new AbortController();
 
   await withMockedAcmeCommerce(fixture, async (calls) => {
-    const legacyResult = await getPaymentDetails.execute(
-      { paymentId: fixture.paymentId },
-      AI_SDK_TOOL_OPTIONS,
-    );
     const eveResult = await getPaymentDetailsEve.execute(
       { paymentId: fixture.paymentId },
       eveContext("get-payment-details", controller.signal),
     );
 
-    assert.deepEqual(eveResult, legacyResult);
     assert.deepEqual(eveResult, fixture);
     assert.equal(String(calls[0]?.input), `${TEST_BASE_URL}/payments/pay_2007`);
-    assert.equal(String(calls[1]?.input), `${TEST_BASE_URL}/payments/pay_2007`);
-    assert.equal(calls[1]?.init?.signal, controller.signal);
+    assert.equal(calls[0]?.init?.signal, controller.signal);
+    assert.equal(calls.length, 1);
   });
 });
 
-test("Eve transaction tool preserves the legacy authoritative result", async () => {
+test("Eve transaction tool returns the authoritative transaction result", async () => {
   const fixture = {
     transactionHash: "0xtransaction",
     paymentId: "pay_2007",
@@ -113,26 +98,18 @@ test("Eve transaction tool preserves the legacy authoritative result", async () 
   const controller = new AbortController();
 
   await withMockedAcmeCommerce(fixture, async (calls) => {
-    const legacyResult = await getTransactionDetails.execute(
-      { transactionHash: fixture.transactionHash },
-      AI_SDK_TOOL_OPTIONS,
-    );
     const eveResult = await getTransactionDetailsEve.execute(
       { transactionHash: fixture.transactionHash },
       eveContext("get-transaction-details", controller.signal),
     );
 
-    assert.deepEqual(eveResult, legacyResult);
     assert.deepEqual(eveResult, fixture);
     assert.equal(
       String(calls[0]?.input),
       `${TEST_BASE_URL}/transactions/0xtransaction`,
     );
-    assert.equal(
-      String(calls[1]?.input),
-      `${TEST_BASE_URL}/transactions/0xtransaction`,
-    );
-    assert.equal(calls[1]?.init?.signal, controller.signal);
+    assert.equal(calls[0]?.init?.signal, controller.signal);
+    assert.equal(calls.length, 1);
   });
 });
 
@@ -150,20 +127,15 @@ test("Eve settlement tool preserves null instead of inventing a net amount", asy
   const controller = new AbortController();
 
   await withMockedAcmeCommerce(fixture, async (calls) => {
-    const legacyResult = await getSettlementDetails.execute(
-      { paymentId: fixture.paymentId },
-      AI_SDK_TOOL_OPTIONS,
-    );
     const eveResult = await getSettlementDetailsEve.execute(
       { paymentId: fixture.paymentId },
       eveContext("get-settlement-details", controller.signal),
     );
 
-    assert.deepEqual(eveResult, legacyResult);
     assert.deepEqual(eveResult, fixture);
     assert.equal(eveResult.netUsd, null);
     assert.equal(String(calls[0]?.input), `${TEST_BASE_URL}/settlements/pay_2007`);
-    assert.equal(String(calls[1]?.input), `${TEST_BASE_URL}/settlements/pay_2007`);
-    assert.equal(calls[1]?.init?.signal, controller.signal);
+    assert.equal(calls[0]?.init?.signal, controller.signal);
+    assert.equal(calls.length, 1);
   });
 });

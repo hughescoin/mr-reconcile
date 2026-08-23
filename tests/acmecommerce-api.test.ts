@@ -6,7 +6,7 @@ import {
   getPayment,
   getSettlement,
   getTransaction,
-} from "../lib/acmecommerce-api";
+} from "../lib/acmecommerce-api-core";
 
 const KNOWN_PAYMENT_ID = "pay_2007";
 const KNOWN_TRANSACTION_HASH =
