@@ -153,7 +153,11 @@ Used for:
 - same-origin Next.js routes through `withEve()`
 - streamed React state through `useEveAgent()`
 - authoritative structured tool-result events
+- resumable browser sessions using the saved event prefix and session cursor
 - repeatable Eve-native evals
+
+See [the Eve durability experiment](docs/eve-durability.md) for the browser
+recovery design, retry semantics, and checkpoint results.
 
 ### AI Gateway
 
@@ -232,7 +236,7 @@ This is a focused proof of concept.
 - **Authentication and authorization:** The public demo intentionally does not implement merchant identity or tenant authorization.
 - **Network boundary:** The current Vercel-to-AWS integration uses public HTTPS.
 - **Agent nondeterminism:** Model-driven tool selection can produce different investigation paths across runs. Higher-risk mandatory financial checks may warrant deterministic application logic.
-- **Durability and history:** Eve durably executes each live session, but this checkpoint does not yet persist the browser session cursor or event log across page reloads and does not provide a long-term audit store.
+- **Durability and history:** Eve durably executes each live session, and the browser saves its event prefix and session cursor for reload recovery. The proof of concept still does not provide a shared, server-side audit store across browsers or users.
 
 ## Validation
 

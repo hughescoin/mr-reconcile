@@ -55,10 +55,14 @@ export function mapEveInvestigationSteps(
     if (
       event.type !== "action.result" ||
       event.data.turnId !== latestTurnId ||
-      event.data.status !== "completed" ||
       event.data.result.kind !== "tool-result" ||
       !RECONCILIATION_TOOLS.has(event.data.result.toolName)
     ) {
+      continue;
+    }
+
+    if (event.data.status !== "completed") {
+      removeStep(projected, event.data.result.callId);
       continue;
     }
 
@@ -198,6 +202,14 @@ function upsertStep(steps: ProjectedStep[], next: ProjectedStep) {
   }
 
   steps[existingIndex] = next;
+}
+
+function removeStep(steps: ProjectedStep[], callId: string) {
+  const existingIndex = steps.findIndex((step) => step.callId === callId);
+
+  if (existingIndex !== -1) {
+    steps.splice(existingIndex, 1);
+  }
 }
 
 function readString(value: unknown) {

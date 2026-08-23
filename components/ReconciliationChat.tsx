@@ -1,12 +1,18 @@
 "use client";
 
 import { useEveAgent } from "eve/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnswerSection } from "@/components/AnswerSection";
 import { AskPanel } from "@/components/AskPanel";
 import { ExamplePromptChips } from "@/components/ExamplePromptChips";
 import { InvestigationTrace } from "@/components/InvestigationTrace";
 import { StatusBadge } from "@/components/StatusBadge";
+import {
+  loadSavedEveChat,
+  resumeSavedEveChat,
+  saveEveChat,
+  type SavedEveChat,
+} from "@/lib/eve-chat-persistence";
 import { mapEveInvestigationSteps } from "@/lib/map-eve-investigation-steps";
 
 const EXAMPLE_PROMPTS = [
@@ -30,8 +36,61 @@ const EXAMPLE_PROMPTS = [
 ];
 
 export function ReconciliationChat() {
+  const [savedChat, setSavedChat] = useState<SavedEveChat>();
+
+  useEffect(() => {
+    let active = true;
+    const storage = window.localStorage;
+    const saved = loadSavedEveChat(storage);
+
+    void resumeSavedEveChat(storage, saved).then((resumed) => {
+      if (active) {
+        setSavedChat(resumed);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!savedChat) {
+    return null;
+  }
+
+  return <ReconciliationChatSession savedChat={savedChat} />;
+}
+
+function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
   const [input, setInput] = useState("");
-  const agent = useEveAgent();
+  const persistedEvents = useRef([...savedChat.events]);
+  const persistedSession = useRef(savedChat.session);
+  const agent = useEveAgent({
+    initialEvents: savedChat.events,
+    initialSession: savedChat.session,
+    onEvent(event) {
+      persistedEvents.current = [...persistedEvents.current, event];
+      persistChat({
+        events: persistedEvents.current,
+        session: persistedSession.current,
+      });
+    },
+    onSessionChange(session) {
+      persistedSession.current = session;
+      persistChat({
+        events: persistedEvents.current,
+        session,
+      });
+    },
+    onFinish(snapshot) {
+      persistedEvents.current = [...snapshot.events];
+      persistedSession.current = snapshot.session;
+      persistChat({
+        events: snapshot.events,
+        session: snapshot.session,
+      });
+    },
+  });
   const { messages } = agent.data;
 
   async function handleSubmit() {
@@ -147,5 +206,12 @@ export function ReconciliationChat() {
         </section>
       )}
     </>
+  );
+}
+
+function persistChat(chat: SavedEveChat) {
+  saveEveChat(
+    typeof window === "undefined" ? undefined : window.localStorage,
+    chat,
   );
 }

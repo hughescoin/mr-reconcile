@@ -201,6 +201,133 @@ test("projects only the latest durable turn", () => {
   assert.equal(mapEveInvestigationSteps(events)[0]?.reference, "pay_new");
 });
 
+test("replaces retry events for the same call instead of duplicating a row", () => {
+  const events: MessageStreamEvent[] = [
+    event({
+      type: "turn.started",
+      data: { sequence: 0, turnId: "turn_retry" },
+    }),
+    event({
+      type: "actions.requested",
+      data: {
+        actions: [
+          {
+            callId: "call_payment",
+            input: { paymentId: "pay_2007" },
+            kind: "tool-call",
+            toolName: "get-payment-details",
+          },
+        ],
+        sequence: 0,
+        stepIndex: 0,
+        turnId: "turn_retry",
+      },
+    }),
+    event({
+      type: "actions.requested",
+      data: {
+        actions: [
+          {
+            callId: "call_payment",
+            input: { paymentId: "pay_2007" },
+            kind: "tool-call",
+            toolName: "get-payment-details",
+          },
+        ],
+        sequence: 0,
+        stepIndex: 0,
+        turnId: "turn_retry",
+      },
+    }),
+    toolResult("turn_retry", "call_payment", "get-payment-details", {
+      paymentId: "pay_2007",
+      merchantOrderId: "order_9007",
+      transactionHash: "1234567890abcdef",
+      expectedUsd: 890,
+      network: "bitcoin",
+      paymentStatus: "COMPLETED",
+      createdAt: "2026-08-20T15:00:00.000Z",
+    }),
+  ];
+
+  const steps = mapEveInvestigationSteps(events);
+
+  assert.equal(steps.length, 1);
+  assert.equal(steps[0]?.reference, "pay_2007");
+  assert.equal(steps[0]?.amount, "$890.00");
+});
+
+test("removes a failed lookup when the model retries with a corrected payment ID", () => {
+  const events: MessageStreamEvent[] = [
+    event({
+      type: "turn.started",
+      data: { sequence: 0, turnId: "turn_corrected_id" },
+    }),
+    event({
+      type: "actions.requested",
+      data: {
+        actions: [
+          {
+            callId: "call_invalid_payment",
+            input: { paymentId: "2007" },
+            kind: "tool-call",
+            toolName: "get-payment-details",
+          },
+        ],
+        sequence: 0,
+        stepIndex: 0,
+        turnId: "turn_corrected_id",
+      },
+    }),
+    failedToolResult(
+      "turn_corrected_id",
+      "call_invalid_payment",
+      "get-payment-details",
+    ),
+    event({
+      type: "actions.requested",
+      data: {
+        actions: [
+          {
+            callId: "call_corrected_payment",
+            input: { paymentId: "pay_2007" },
+            kind: "tool-call",
+            toolName: "get-payment-details",
+          },
+        ],
+        sequence: 0,
+        stepIndex: 1,
+        turnId: "turn_corrected_id",
+      },
+    }),
+    toolResult(
+      "turn_corrected_id",
+      "call_corrected_payment",
+      "get-payment-details",
+      {
+        paymentId: "pay_2007",
+        merchantOrderId: "order_9007",
+        transactionHash: "1234567890abcdef",
+        expectedUsd: 890,
+        network: "bitcoin",
+        paymentStatus: "COMPLETED",
+        createdAt: "2026-08-20T15:00:00.000Z",
+      },
+    ),
+  ];
+
+  assert.deepEqual(mapEveInvestigationSteps(events), [
+    {
+      type: "payment",
+      label: "Payment lookup",
+      detail: "Payment record retrieved",
+      reference: "pay_2007",
+      amount: "$890.00",
+      status: "completed",
+    },
+  ]);
+});
+
 function toolResult(
   turnId: string,
   callId: string,
@@ -218,6 +345,33 @@ function toolResult(
       },
       sequence: 0,
       status: "completed",
+      stepIndex: 0,
+      turnId,
+    },
+  } as UnstampedEvent);
+}
+
+function failedToolResult(
+  turnId: string,
+  callId: string,
+  toolName: string,
+): MessageStreamEvent {
+  return event({
+    type: "action.result",
+    data: {
+      error: {
+        code: "NOT_FOUND",
+        message: "Payment not found",
+      },
+      result: {
+        callId,
+        isError: true,
+        kind: "tool-result",
+        output: { error: "Payment not found" },
+        toolName,
+      },
+      sequence: 0,
+      status: "failed",
       stepIndex: 0,
       turnId,
     },
