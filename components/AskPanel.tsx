@@ -6,6 +6,7 @@ export function AskPanel({
   onValueChange,
   onSubmit,
   disabled = false,
+  statusMessage = "Investigating authoritative records…",
   children,
 }: {
   label?: string;
@@ -13,8 +14,9 @@ export function AskPanel({
   ctaLabel?: string;
   value: string;
   onValueChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
   disabled?: boolean;
+  statusMessage?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -26,9 +28,10 @@ export function AskPanel({
 
         <form
           className="ask-row"
+          aria-busy={disabled}
           onSubmit={(event) => {
             event.preventDefault();
-            onSubmit();
+            void onSubmit();
           }}
         >
           <input
@@ -39,6 +42,7 @@ export function AskPanel({
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             disabled={disabled}
+            aria-describedby="ask-status"
           />
 
           <button
@@ -46,9 +50,21 @@ export function AskPanel({
             className="ask-cta"
             disabled={disabled}
           >
-            {disabled ? "Investigating…" : ctaLabel}
+            {disabled && (
+              <span className="ask-cta__spinner" aria-hidden="true" />
+            )}
+            <span>{disabled ? "Investigating…" : ctaLabel}</span>
           </button>
         </form>
+
+        <div
+          className={`ask-status${disabled ? " ask-status--active" : ""}`}
+          id="ask-status"
+          role="status"
+          aria-live="polite"
+        >
+          {disabled ? statusMessage : ""}
+        </div>
 
         {children}
       </div>
