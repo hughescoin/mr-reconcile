@@ -67,7 +67,7 @@ export default function ArchitecturePage() {
   return (
     <div className="page">
       <Header initials="SE" activePath="/architecture" />
-      <main className="info-page">
+      <main className="info-page" id="main-content">
         <header className="info-page__intro">
           <div className="eyebrow">Mr. Reconcile</div>
           <h1 className="info-page__title">System architecture.</h1>

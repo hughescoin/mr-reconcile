@@ -7,6 +7,7 @@ import { AskPanel } from "@/components/AskPanel";
 import { ExamplePromptChips } from "@/components/ExamplePromptChips";
 import { InvestigationTrace } from "@/components/InvestigationTrace";
 import { StatusBadge } from "@/components/StatusBadge";
+import { prepareChatSubmission } from "@/lib/chat-submission";
 import {
   loadSavedEveChat,
   resumeSavedEveChat,
@@ -63,11 +64,18 @@ export function ReconciliationChat() {
 
 function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
   const [input, setInput] = useState("");
+  const [submissionPending, setSubmissionPending] = useState(false);
+  const [activeSubmission, setActiveSubmission] = useState<{
+    previousAssistantId?: string;
+    question: string;
+  }>();
+  const submissionLock = useRef(false);
   const persistedEvents = useRef([...savedChat.events]);
   const persistedSession = useRef(savedChat.session);
   const agent = useEveAgent({
     initialEvents: savedChat.events,
     initialSession: savedChat.session,
+    optimistic: true,
     onEvent(event) {
       persistedEvents.current = [...persistedEvents.current, event];
       persistChat({
@@ -92,19 +100,6 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
     },
   });
   const { messages } = agent.data;
-
-  async function handleSubmit() {
-    const question = input.trim();
-
-    if (!question) {
-      return;
-    }
-
-    setInput("");
-
-    await agent.send(question);
-  }
-
   const latestUserMessage = [...messages]
     .reverse()
     .find((message) => message.role === "user");
@@ -112,17 +107,26 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
     .reverse()
     .find((message) => message.role === "assistant");
   const question =
+    activeSubmission?.question ??
     latestUserMessage?.parts
       .filter((part) => part.type === "text")
       .map((part) => part.text)
-      .join("") ?? "";
+      .join("") ??
+    "";
+  const assistantMatchesActiveSubmission =
+    !activeSubmission ||
+    latestAssistantMessage?.id !== activeSubmission.previousAssistantId;
   const answer =
-    latestAssistantMessage?.parts
-      .filter((part) => part.type === "text")
-      .map((part) => part.text)
-      .join("") ?? "";
+    assistantMatchesActiveSubmission
+      ? latestAssistantMessage?.parts
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join("") ?? ""
+      : "";
   const isInvestigating =
-    agent.status === "submitted" || agent.status === "streaming";
+    submissionPending ||
+    agent.status === "submitted" ||
+    agent.status === "streaming";
   const investigationSteps =
     agent.status === "submitted"
       ? []
@@ -131,6 +135,36 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
   const settlementStep = investigationSteps.find(
     (step) => step.type === "settlement",
   );
+  const responseStatus =
+    investigationSteps.length > 0
+      ? "Reviewing payment, transaction, and settlement records…"
+      : "Starting a reconciliation investigation…";
+
+  async function handleSubmit() {
+    const submission = prepareChatSubmission(
+      input,
+      submissionLock.current || isInvestigating,
+    );
+
+    if (!submission) {
+      return;
+    }
+
+    submissionLock.current = true;
+    setInput(submission.clearedInput);
+    setSubmissionPending(true);
+    setActiveSubmission({
+      previousAssistantId: latestAssistantMessage?.id,
+      question: submission.question,
+    });
+
+    try {
+      await agent.send(submission.question);
+    } finally {
+      submissionLock.current = false;
+      setSubmissionPending(false);
+    }
+  }
 
   return (
     <>
@@ -139,6 +173,7 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
         onValueChange={setInput}
         onSubmit={handleSubmit}
         disabled={isInvestigating}
+        statusMessage={responseStatus}
       >
         <div className="example-prompts">
           <div className="example-prompts__title">
@@ -150,6 +185,7 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
 
           <ExamplePromptChips
             prompts={EXAMPLE_PROMPTS.map((item) => item.label)}
+            disabled={isInvestigating}
             onSelect={(label) => {
               const example = EXAMPLE_PROMPTS.find(
                 (item) => item.label === label,
@@ -183,9 +219,18 @@ function ReconciliationChatSession({ savedChat }: { savedChat: SavedEveChat }) {
           }
         >
           {answer ? (
-            <p style={{ margin: 0 }}>{answer}</p>
+            <p className="answer-copy" aria-live="polite">
+              {answer}
+            </p>
           ) : (
-            <p style={{ margin: 0 }}>Mr. Reconcile is investigating…</p>
+            <div className="response-state" role="status" aria-live="polite">
+              <span className="response-state__indicator" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span>{responseStatus}</span>
+            </div>
           )}
         </AnswerSection>
       )}

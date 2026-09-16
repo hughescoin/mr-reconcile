@@ -74,7 +74,7 @@ export function MrReconcileMascot({ className }: { className?: string }) {
         x="200"
         y="211"
         textAnchor="middle"
-        fontFamily="var(--font-serif), serif"
+        fontFamily="var(--font-sans), sans-serif"
         fontSize="30"
         fontWeight="500"
         fill="currentColor"

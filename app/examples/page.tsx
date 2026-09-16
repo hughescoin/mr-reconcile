@@ -40,7 +40,7 @@ export default function ExamplesPage() {
   return (
     <div className="page">
       <Header initials="SE" activePath="/examples" />
-      <main className="info-page">
+      <main className="info-page" id="main-content">
         <header className="info-page__intro">
           <div className="eyebrow">Example cases</div>
           <h1 className="info-page__title">Four trails worth following.</h1>

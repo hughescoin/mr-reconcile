@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="page">
       <Header initials="SE" />
-      <main>
+      <main id="main-content">
         <Hero />
         <ReconciliationChat />
       </main>

@@ -1,0 +1,7 @@
+# Local Eve runtime and evaluation artifacts
+.eve
+.output
+
+# Local browser and TypeScript caches
+.playwright-mcp
+tsconfig.tsbuildinfo
