@@ -1,22 +1,14 @@
-import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const serif = Newsreader({
+const sans = Geist({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-});
-
-const sans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   variable: "--font-sans",
 });
 
-const mono = IBM_Plex_Mono({
+const mono = Geist_Mono({
   subsets: ["latin"],
-  weight: ["400", "500"],
   variable: "--font-mono",
 });
 
@@ -26,13 +18,20 @@ export const metadata: Metadata = {
     "Ask why a crypto payment is missing, short, pending, or out of line with merchant records.",
 };
 
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#f2efe6",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${serif.variable} ${sans.variable} ${mono.variable}`}
-    >
-      <body>{children}</body>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+      <body>
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }
